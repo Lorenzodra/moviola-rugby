@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Moviola CUS Torino</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sala video — monitor grande a sinistra, registro dei tag a destra; sotto il monitor la "striscia" della partita. */
+:root{
+  --bg:#f3f1f4; --panel:#ffffff; --ink:#1d1a22; --mut:#6c6577; --line:#dcd7e2; --well:#e9e5ee;
+  --rosa:#d6337a; --rosa-ink:#ffffff;
+  --mischie:#c2412d; --touche:#2f63c4; --tmaul:#7b48c2; --maul:#16857a; --gioco:#9cc79a;
+  --f-disp:"Barlow Condensed","Arial Narrow",sans-serif; --f-body:"IBM Plex Sans",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141218; --panel:#1d1a23; --ink:#ece8f1; --mut:#a49cb0; --line:#322d3b; --well:#26222d;
+  --rosa:#ec5b9a; --rosa-ink:#16121a; --mischie:#e2654f; --touche:#6c97ec; --tmaul:#a37ae6; --maul:#3bb3a5; --gioco:#4f7c4d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141218; --panel:#1d1a23; --ink:#ece8f1; --mut:#a49cb0; --line:#322d3b; --well:#26222d;
+  --rosa:#ec5b9a; --rosa-ink:#16121a; --mischie:#e2654f; --touche:#6c97ec; --tmaul:#a37ae6; --maul:#3bb3a5; --gioco:#4f7c4d; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body);padding-block:16px 32px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1320px;margin:0 auto;display:grid;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;border-bottom:3px solid var(--rosa);padding-bottom:10px}
+h1{font:700 2rem/1 var(--f-disp);letter-spacing:.01em;margin:0;text-wrap:balance}
+h1 b{color:var(--rosa)}
+.sub{color:var(--mut);font-size:.9rem}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.mon{display:grid;gap:10px;min-width:0}
+.schermo{position:relative;background:#000;aspect-ratio:16/9;max-width:100%;border-radius:4px;overflow:hidden}
+.schermo video{position:absolute;inset:0;width:100%;height:100%;background:#000}
+.vuoto{position:absolute;inset:0;display:grid;place-content:center;gap:10px;text-align:center;color:#e9e4ee;padding:16px}
+.vuoto p{margin:0;max-width:46ch}
+.badge{position:absolute;left:10px;top:10px;font:600 .8rem var(--f-mono);background:rgba(0,0,0,.6);color:#fff;padding:3px 8px;border-radius:3px}
+.modi{display:flex;flex-wrap:wrap;gap:6px}
+.modi button,.btn{font:600 1rem/1 var(--f-disp);letter-spacing:.03em;text-transform:uppercase;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 12px;border-radius:3px;cursor:pointer}
+.modi button[aria-pressed="true"]{background:var(--rosa);border-color:var(--rosa);color:var(--rosa-ink)}
+.modi button small{font:500 .78rem var(--f-mono);opacity:.8;margin-left:4px;text-transform:none}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--rosa);outline-offset:2px}
+.comandi{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.comandi .tc{font:500 1rem var(--f-mono);font-variant-numeric:tabular-nums;margin-right:auto;min-width:0}
+.btn.s{font-size:.9rem;padding:6px 9px}
+select{font:500 .9rem var(--f-body);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:5px 6px}
+.striscia{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px 10px 6px;display:grid;gap:4px}
+.corsia{position:relative;height:18px;background:var(--well);border-radius:2px;cursor:pointer;overflow:hidden}
+.corsia.tag{height:22px}
+.corsia i{position:absolute;top:0;bottom:0}
+.corsia i.att{outline:2px solid var(--ink);outline-offset:-2px;z-index:1}
+.testina{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--rosa);z-index:2;pointer-events:none}
+.assi{display:flex;justify-content:space-between;font:400 .72rem var(--f-mono);color:var(--mut)}
+.leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--mut)}
+.leg span::before{content:"";display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.reg{background:var(--panel);border:1px solid var(--line);border-radius:4px;display:grid;min-width:0}
+.reg h2{font:700 1.3rem var(--f-disp);margin:0;padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
+.reg h2 small{font:400 .8rem var(--f-body);color:var(--mut)}
+.filtri,.nuovo{display:flex;flex-wrap:wrap;gap:5px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.chip{font:600 .78rem var(--f-body);border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:20px;padding:3px 9px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c)}
+.chip i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:5px}
+.nuovo{align-items:center}
+.nuovo b{font-size:.78rem;color:var(--mut);font-weight:500;margin-right:2px}
+.add{font:600 .78rem var(--f-body);border:1px dashed var(--c);color:var(--ink);background:transparent;border-radius:3px;padding:3px 7px;cursor:pointer}
+.lista{max-height:520px;overflow:auto}
+.riga{display:grid;grid-template-columns:20px 6px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 12px;border-bottom:1px solid var(--line)}
+.riga.on{background:var(--well)}
+.riga .col{align-self:stretch;background:var(--c);border-radius:2px}
+.riga .t{font:500 .86rem var(--f-mono);font-variant-numeric:tabular-nums;cursor:pointer}
+.riga .t span{display:block;font:500 .74rem var(--f-body);color:var(--mut)}
+.riga .az{display:flex;gap:3px}
+.mini{font:500 .72rem var(--f-mono);border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:3px;padding:2px 5px;cursor:pointer}
+.piede{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px}
+.nota{font-size:.8rem;color:var(--mut);padding:0 12px 10px;margin:0}
+.aiuto{font-size:.8rem;color:var(--mut);margin:0}
+kbd{font:500 .74rem var(--f-mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 4px;background:var(--panel)}
+textarea{width:100%;min-height:90px;font:400 .75rem var(--f-mono);background:var(--well);color:var(--ink);border:1px solid var(--line);border-radius:3px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+
+</head><body>
+<div class="wrap">
+  <header>
+    <h1>Moviola <b id="titolo">CUS Torino – CUS Milano</b></h1>
+    <span class="sub" id="sottotitolo">25/10/2026 · video originale, montato al volo</span>
+  </header>
+
+  <div class="grid">
+    <section class="mon" aria-label="Monitor">
+      <div class="schermo">
+        <video id="v1" playsinline preload="metadata"></video>
+        <video id="v2" playsinline preload="metadata" hidden></video>
+        <span class="badge" id="badge">Ripresa stretta</span>
+        <div class="vuoto" id="vuoto">
+          <p><strong>Scegli il video originale della partita</strong> (<span id="nomeVideo">MAH00040.MP4</span>). Resta sul tuo computer: l'app lo legge senza caricarlo da nessuna parte.</p>
+          <div><label class="btn" for="file1">Apri video</label><input id="file1" type="file" accept="video/*,.mp4,.mov" hidden></div>
+        </div>
+      </div>
+
+      <div class="modi" role="group" aria-label="Modalità di visione" id="modi"></div>
+
+      <div class="comandi">
+        <span class="tc" id="tc">00:00 / 00:00</span>
+        <button class="btn s" id="prec" title="Spezzone precedente (P)">◀ Prec.</button>
+        <button class="btn s" id="play" title="Play / pausa (spazio)">Play</button>
+        <button class="btn s" id="succ" title="Spezzone successivo (N)">Succ. ▶</button>
+        <label for="vel" class="aiuto">Velocità</label>
+        <select id="vel"><option>0.5</option><option selected>1</option><option>1.5</option><option>2</option></select>
+        <button class="btn s" id="angolo" title="Cambia ripresa (R)">Ripresa larga</button>
+        <input id="file2" type="file" accept="video/*,.mp4,.mov" hidden>
+      </div>
+
+      <div class="striscia">
+        <div class="corsia" id="corsiaGioco" title="Palla in gioco: clicca per andare a quel punto"><span class="testina" id="t1"></span></div>
+        <div class="corsia tag" id="corsiaTag" title="Tag: clicca per andare a quel punto"><span class="testina" id="t2"></span></div>
+        <div class="assi" id="assi"></div>
+        <div class="leg">
+          <span style="--c:var(--gioco)">Palla in gioco</span><span style="--c:var(--mischie)">Mischia</span><span style="--c:var(--touche)">Touche</span>
+          <span style="--c:var(--tmaul)">Touche + maul</span><span style="--c:var(--maul)">Maul</span>
+        </div>
+      </div>
+      <p class="aiuto"><kbd>spazio</kbd> play/pausa · <kbd>←</kbd><kbd>→</kbd> 5 s · <kbd>N</kbd>/<kbd>P</kbd> spezzone dopo/prima · <kbd>R</kbd> cambia ripresa · <kbd>M</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>A</kbd> aggiungi mischia, touche, touche+maul, maul nel punto attuale</p>
+    </section>
+
+    <aside class="reg" aria-label="Registro dei tag">
+      <h2>Tag <small id="conta"></small></h2>
+      <div class="filtri" id="filtri"></div>
+      <div class="nuovo" id="nuovo"><b>Aggiungi qui:</b></div>
+      <div class="lista" id="lista"></div>
+      <div class="piede">
+        <button class="btn s" id="riprodSel">Riproduci selezionati</button>
+        <button class="btn s" id="esporta">Esporta tag</button>
+        <label class="btn s" for="fileTag">Importa tag</label><input id="fileTag" type="file" accept=".json,application/json" hidden>
+        <button class="btn s" id="ripristina">Ripristina</button>
+      </div>
+      <p class="nota" id="notaSalva">Le modifiche ai tag restano salvate in questo browser. Con «Esporta tag» li salvi in un file da passare ai compagni (che lo aprono con «Importa tag») o a Claude per migliorare il modello.</p>
+      <div id="boxEsporta" hidden style="padding:0 12px 12px"><textarea id="testoEsporta" aria-label="Tag in formato JSON" readonly></textarea></div>
+    </aside>
+  </div>
+</div>
+
+<script type="application/json" id="dati">{"titolo":"CUS Torino \u2013 CUS Milano","data":"25/10/2026","video":"MAH00040.MP4","video_rel":"../25-10-2026/MAH00040.MP4","durata":5554.08,"angolo2":{"nome":"Ripresa larga","offset":1.16},"bip":[[53.8,98.3],[200.8,282.8],[322.8,397.8],[400.3,426.3],[437.8,479.3],[520.3,561.3],[584.3,630.8],[756.8,786.3],[820.8,858.8],[886.3,909.8],[1056.8,1163.3],[1164.8,1189.8],[1225.8,1237.8],[1346.8,1377.3],[1433.8,1441.8],[1498.3,1509.3],[1521.3,1528.3],[1540.8,1687.8],[1692.8,1704.3],[1734.8,1756.8],[1802.3,1847.3],[1941.3,2011.3],[2065.8,2130.8],[2178.8,2194.3],[2261.3,2269.8],[2321.3,2341.3],[2444.3,2474.3],[2560.8,2573.8],[2599.8,2652.3],[2808.3,2838.8],[3078.8,3087.8],[3114.3,3193.8],[3208.3,3226.3],[3241.8,3251.8],[3271.8,3315.8],[3386.8,3430.8],[3481.8,3500.3],[3560.3,3614.3],[3643.3,3694.8],[3775.8,3788.8],[3814.3,3844.8],[3962.8,3977.3],[3983.8,4063.8],[4101.3,4183.8],[4260.3,4278.3],[4326.3,4332.3],[4383.3,4448.3],[4554.8,4599.3],[4658.8,4680.3],[4683.3,4722.8],[4853.2,4865.3],[4989.6,5001.6],[5190.2,5214.8],[5341.9,5354.0]],"tag":[{"tipo":"mischie","da":44.0,"a":66.0,"ev_da":48.0,"ev_a":60.0},{"tipo":"mischie","da":86.0,"a":122.0,"ev_da":90.0,"ev_a":116.0},{"tipo":"touche_maul","da":178.0,"a":204.0,"ev_da":180.0,"ev_a":200.0},{"tipo":"mischie","da":326.0,"a":340.0,"ev_da":330.0,"ev_a":334.0},{"tipo":"touche","da":392.0,"a":414.0,"ev_da":394.0,"ev_a":406.0},{"tipo":"mischie","da":504.0,"a":536.0,"ev_da":508.0,"ev_a":530.0},{"tipo":"touche","da":576.0,"a":600.0,"ev_da":578.0,"ev_a":592.0},{"tipo":"touche","da":694.0,"a":728.0,"ev_da":696.0,"ev_a":720.0},{"tipo":"mischie","da":738.0,"a":774.0,"ev_da":742.0,"ev_a":768.0},{"tipo":"touche","da":838.0,"a":856.0,"ev_da":840.0,"ev_a":848.0},{"tipo":"mischie","da":868.0,"a":906.0,"ev_da":872.0,"ev_a":900.0},{"tipo":"mischie","da":1006.0,"a":1038.0,"ev_da":1010.0,"ev_a":1032.0},{"tipo":"maul","da":1134.0,"a":1144.0,"ev_da":1136.0,"ev_a":1140.0},{"tipo":"touche_maul","da":1164.0,"a":1226.0,"ev_da":1166.0,"ev_a":1222.0},{"tipo":"maul","da":1302.0,"a":1322.0,"ev_da":1304.0,"ev_a":1318.0},{"tipo":"mischie","da":1332.0,"a":1346.0,"ev_da":1336.0,"ev_a":1340.0},{"tipo":"maul","da":1354.0,"a":1370.0,"ev_da":1356.0,"ev_a":1366.0},{"tipo":"mischie","da":1520.0,"a":1560.0,"ev_da":1524.0,"ev_a":1554.0},{"tipo":"mischie","da":1724.0,"a":1748.0,"ev_da":1728.0,"ev_a":1742.0},{"tipo":"mischie","da":1770.0,"a":1818.0,"ev_da":1774.0,"ev_a":1812.0},{"tipo":"maul","da":1952.0,"a":1964.0,"ev_da":1954.0,"ev_a":1960.0},{"tipo":"touche","da":2058.0,"a":2078.0,"ev_da":2060.0,"ev_a":2070.0},{"tipo":"mischie","da":2300.0,"a":2340.0,"ev_da":2304.0,"ev_a":2334.0},{"tipo":"maul","da":2570.0,"a":2592.0,"ev_da":2572.0,"ev_a":2588.0},{"tipo":"maul","da":3374.0,"a":3392.0,"ev_da":3376.0,"ev_a":3388.0},{"tipo":"mischie","da":3552.0,"a":3590.0,"ev_da":3556.0,"ev_a":3584.0},{"tipo":"mischie","da":3970.0,"a":4002.0,"ev_da":3974.0,"ev_a":3996.0},{"tipo":"mischie","da":4206.0,"a":4236.0,"ev_da":4210.0,"ev_a":4230.0},{"tipo":"mischie","da":4366.0,"a":4396.0,"ev_da":4370.0,"ev_a":4390.0},{"tipo":"mischie","da":4536.0,"a":4562.0,"ev_da":4540.0,"ev_a":4556.0},{"tipo":"mischie","da":4644.0,"a":4674.0,"ev_da":4648.0,"ev_a":4668.0},{"tipo":"mischie","da":5160.0,"a":5204.0,"ev_da":5164.0,"ev_a":5198.0}]}</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById('dati').textContent);
+  const TIPI = {mischie:{n:'Mischia',p:'Mischie',c:'var(--mischie)',k:'m',pre:4,post:8},
+                touche:{n:'Touche',p:'Touche',c:'var(--touche)',k:'t',pre:2,post:10},
+                touche_maul:{n:'Touche + maul',p:'Touche + maul',c:'var(--tmaul)',k:'y',pre:2,post:16},
+                maul:{n:'Maul',p:'Maul',c:'var(--maul)',k:'a',pre:2,post:8}};
+  const $ = id => document.getElementById(id);
+  const v1 = $('v1'), v2 = $('v2');
+  const KEY = 'moviola-tag-' + D.video;
+  let tags, att = v1, offAtt = 0, modo = 'intera', lista = [], filtro = new Set(Object.keys(TIPI)), sel = new Set();
+  const dur = () => (v1.duration && isFinite(v1.duration)) ? v1.duration : D.durata;
+  const mmss = s => { s = Math.max(0, Math.round(s)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+
+  function carica() {
+    try { const s = localStorage.getItem(KEY); if (s) return JSON.parse(s); } catch (e) {}
+    return D.tag.map((t, i) => ({...t, id: 'o' + i}));
+  }
+  function salva() { try { localStorage.setItem(KEY, JSON.stringify(tags)); } catch (e) {} }
+  tags = carica();
+
+  // ---------- video ----------
+  $('titolo').textContent = D.titolo; $('nomeVideo').textContent = D.video;
+  $('sottotitolo').textContent = D.data + ' · video originale, montato al volo';
+  function apri(file, v) { v.src = URL.createObjectURL(file); if (v === v1) $('vuoto').hidden = true; }
+  $('file1').onchange = e => e.target.files[0] && apri(e.target.files[0], v1);
+  if (location.protocol === 'file:' && D.video_rel) {           // aperta dal PC: prende il video accanto
+    v1.src = D.video_rel;
+    v1.addEventListener('loadedmetadata', () => { $('vuoto').hidden = true; disegna(); }, {once: true});
+  }
+  v1.addEventListener('loadedmetadata', () => { $('vuoto').hidden = true; disegna(); });
+  for (const v of [v1, v2]) v.addEventListener('error', () => {
+    if (!v.src.startsWith('blob:')) return;                     // il tentativo automatico sul PC puo' fallire senza problemi
+    $('vuoto').hidden = false;
+    $('vuoto').querySelector('p').innerHTML = '<strong>Questo file non si apre nel browser.</strong> Usa Chrome o Edge e un file .mp4 o .mov; i file .m2ts della videocamera vanno prima convertiti in .mp4.';
+  });
+
+  // ---------- modalità ----------
+  const MODI = [['intera', 'Partita intera'], ['condensata', 'Condensata'], ['mischie', 'Mischie'], ['touche', 'Touche'],
+                ['maul', 'Maul'], ['fasi', 'Tutte le fasi statiche'], ['selezione', 'Selezione']];
+  function spezzoni(m) {
+    let seg;
+    if (m === 'intera') return [];
+    if (m === 'condensata') seg = D.bip.map(x => [x[0], x[1]]);
+    else {
+      const ok = m === 'fasi' ? () => true : m === 'selezione' ? t => sel.has(t.id) :
+                 m === 'touche' ? t => t.tipo === 'touche' || t.tipo === 'touche_maul' : t => t.tipo === m;
+      seg = tags.filter(ok).map(t => [t.da, t.a]);
+    }
+    seg.sort((a, b) => a[0] - b[0]);
+    const u = [];
+    for (const s of seg) { if (u.length && s[0] <= u[u.length - 1][1] + 0.5) u[u.length - 1][1] = Math.max(u[u.length - 1][1], s[1]); else u.push([...s]); }
+    return u;
+  }
+  function durTot(seg) { return seg.reduce((a, s) => a + s[1] - s[0], 0); }
+  function disegnaModi() {
+    $('modi').innerHTML = '';
+    for (const [k, n] of MODI) {
+      const b = document.createElement('button'); b.setAttribute('aria-pressed', k === modo);
+      const s = spezzoni(k), extra = k === 'intera' ? mmss(dur()) : k === 'selezione' ? sel.size + ' tag' : mmss(durTot(s));
+      b.innerHTML = n + '<small>' + extra + '</small>';
+      b.onclick = () => impostaModo(k, true); $('modi').appendChild(b);
+    }
+  }
+  function impostaModo(k, parti) {
+    modo = k; lista = spezzoni(k); disegnaModi(); disegna();
+    if (parti && lista.length) { vai(lista[0][0]); att.play(); }
+  }
+
+  // ---------- tempo (sempre nel tempo della ripresa stretta) ----------
+  const ora = () => att.currentTime - offAtt;
+  function vai(t) { att.currentTime = Math.max(0, t + offAtt); }
+  function idxSeg(t) { return lista.findIndex(s => t >= s[0] - 0.05 && t < s[1]); }
+  function controlla() {
+    if (modo !== 'intera' && lista.length && !att.paused) {
+      const t = ora();
+      if (idxSeg(t) < 0) {
+        const n = lista.find(s => s[0] > t - 0.05);
+        if (n) vai(n[0]); else { att.pause(); vai(lista[lista.length - 1][1]); }
+      }
+    }
+    aggiorna();
+  }
+  setInterval(controlla, 120);
+  function salto(dir) {
+    const t = ora();
+    if (modo === 'intera' || !lista.length) { vai(t + dir * 5); return; }
+    const i = idxSeg(t);
+    if (dir > 0) { const n = lista.find(s => s[0] > t + 0.1); if (n) vai(n[0]); }
+    else { const p = [...lista].reverse().find(s => s[0] < (i >= 0 && t - lista[i][0] > 2 ? lista[i][0] + 0.1 : t - 0.5)); if (p) vai(p[0]); }
+  }
+
+  // ---------- striscia della partita ----------
+  function barra(el, a, b, col, cls) {
+    const i = document.createElement('i'); const D0 = dur();
+    i.style.left = (a / D0 * 100) + '%'; i.style.width = Math.max(0.15, (b - a) / D0 * 100) + '%'; i.style.background = col;
+    if (cls) i.className = cls; el.appendChild(i);
+  }
+  function disegna() {
+    const g = $('corsiaGioco'), tg = $('corsiaTag');
+    g.querySelectorAll('i').forEach(x => x.remove()); tg.querySelectorAll('i').forEach(x => x.remove());
+    for (const s of D.bip) barra(g, s[0], s[1], 'var(--gioco)');
+    for (const t of tags) barra(tg, t.da, t.a, TIPI[t.tipo].c, lista.some(s => t.da >= s[0] && t.a <= s[1] + 0.01) && modo !== 'intera' ? 'att' : '');
+    const D0 = dur(), passo = D0 > 3600 ? 900 : 600; let h = '';
+    for (let s = 0; s <= D0; s += passo) h += '<span>' + Math.round(s / 60) + '′</span>';
+    $('assi').innerHTML = h;
+    disegnaLista(); disegnaModi();
+  }
+  for (const id of ['corsiaGioco', 'corsiaTag']) $(id).addEventListener('click', e => {
+    const r = e.currentTarget.getBoundingClientRect(); vai((e.clientX - r.left) / r.width * dur());
+  });
+  function aggiorna() {
+    const t = ora(), p = Math.min(100, t / dur() * 100) + '%';
+    $('t1').style.left = p; $('t2').style.left = p;
+    let txt = mmss(t) + ' / ' + mmss(dur());
+    if (modo !== 'intera' && lista.length) {
+      const i = idxSeg(t), fatto = lista.filter(s => s[1] <= t).reduce((a, s) => a + s[1] - s[0], 0) + (i >= 0 ? t - lista[i][0] : 0);
+      txt += ' · spezzone ' + (i >= 0 ? i + 1 : '–') + '/' + lista.length + ' · ' + mmss(fatto) + ' di ' + mmss(durTot(lista));
+    }
+    $('tc').textContent = txt; $('play').textContent = att.paused ? 'Play' : 'Pausa';
+    document.querySelectorAll('.riga').forEach(r => r.classList.toggle('on', t >= +r.dataset.da && t <= +r.dataset.a));
+  }
+
+  // ---------- registro tag ----------
+  function disegnaFiltri() {
+    $('filtri').innerHTML = '';
+    for (const [k, T] of Object.entries(TIPI)) {
+      const b = document.createElement('button'); b.className = 'chip'; b.style.setProperty('--c', T.c);
+      b.setAttribute('aria-pressed', filtro.has(k)); b.innerHTML = '<i></i>' + T.p + ' ' + tags.filter(t => t.tipo === k).length;
+      b.onclick = () => { filtro.has(k) ? filtro.delete(k) : filtro.add(k); disegnaFiltri(); disegnaLista(); };
+      $('filtri').appendChild(b);
+    }
+    $('nuovo').querySelectorAll('button').forEach(x => x.remove());
+    for (const [k, T] of Object.entries(TIPI)) {
+      const b = document.createElement('button'); b.className = 'add'; b.style.setProperty('--c', T.c);
+      b.textContent = '+ ' + T.n + ' (' + T.k.toUpperCase() + ')'; b.onclick = () => aggiungi(k); $('nuovo').appendChild(b);
+    }
+  }
+  function disegnaLista() {
+    const L = $('lista'); L.innerHTML = '';
+    const vis = tags.filter(t => filtro.has(t.tipo)).sort((a, b) => a.da - b.da);
+    $('conta').textContent = tags.length + ' totali';
+    for (const t of vis) {
+      const T = TIPI[t.tipo], r = document.createElement('div'); r.className = 'riga'; r.dataset.da = t.da; r.dataset.a = t.a;
+      r.innerHTML = `<input type="checkbox" id="s_${t.id}" aria-label="Seleziona" ${sel.has(t.id) ? 'checked' : ''}>
+        <span class="col" style="--c:${T.c}"></span>
+        <div class="t" title="Vai a questo tag">${mmss(t.da)}–${mmss(t.a)}<span>${T.n}${t.nuovo ? ' · aggiunto da te' : ''}</span></div>
+        <div class="az"><button class="mini" data-f="da-">−2 inizio</button><button class="mini" data-f="a+">+2 fine</button><button class="mini" data-f="x" aria-label="Elimina">✕</button></div>`;
+      r.querySelector('input').onchange = e => { e.target.checked ? sel.add(t.id) : sel.delete(t.id); disegnaModi(); if (modo === 'selezione') impostaModo('selezione', false); };
+      r.querySelector('.t').onclick = () => { vai(t.da); att.play(); };
+      r.querySelectorAll('.mini').forEach(b => b.onclick = () => {
+        const f = b.dataset.f;
+        if (f === 'x') tags = tags.filter(x => x !== t);
+        else if (f === 'da-') t.da = Math.max(0, t.da - 2); else t.a += 2;
+        salva(); lista = spezzoni(modo); disegna(); disegnaFiltri();
+      });
+      L.appendChild(r);
+    }
+    if (!vis.length) L.innerHTML = '<p class="nota" style="padding:12px">Nessun tag di questo tipo. Usa i pulsanti qui sopra per aggiungerne.</p>';
+  }
+  function aggiungi(k) {
+    const T = TIPI[k], t = ora();
+    tags.push({tipo: k, da: Math.max(0, Math.round(t - T.pre)), a: Math.round(t + T.post), id: 'n' + Date.now(), nuovo: true});
+    salva(); lista = spezzoni(modo); disegna(); disegnaFiltri();
+  }
+  $('riprodSel').onclick = () => impostaModo('selezione', true);
+  $('fileTag').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const j = JSON.parse(await f.text()), L = Array.isArray(j) ? j : j.tag;
+      if (!Array.isArray(L) || !L.every(t => TIPI[t.tipo] && isFinite(t.da) && isFinite(t.a))) throw new Error();
+      tags = L.map((t, i) => ({tipo: t.tipo, da: +t.da, a: +t.a, id: 'i' + i, nuovo: !!t.nuovo})); sel.clear(); salva();
+      lista = spezzoni(modo); disegna(); disegnaFiltri(); $('notaSalva').textContent = 'Tag importati da ' + f.name + '.';
+    } catch (err) { $('notaSalva').textContent = 'Il file ' + f.name + ' non contiene tag validi (serve un file esportato dalla Moviola).'; }
+    e.target.value = '';
+  };
+  $('ripristina').onclick = () => {
+    const b = $('ripristina');
+    if (b.dataset.conf) { try { localStorage.removeItem(KEY); } catch (e) {} tags = carica(); sel.clear(); b.textContent = 'Ripristina'; delete b.dataset.conf; lista = spezzoni(modo); disegna(); disegnaFiltri(); }
+    else { b.dataset.conf = 1; b.textContent = 'Sicuro? Clicca ancora'; setTimeout(() => { b.textContent = 'Ripristina'; delete b.dataset.conf; }, 4000); }
+  };
+  $('esporta').onclick = async () => {
+    const txt = JSON.stringify({video: D.video, partita: D.titolo + ' ' + D.data, tag: tags.map(({id, ...r}) => r)}, null, 1);
+    $('boxEsporta').hidden = false; $('testoEsporta').value = txt;
+    if (!/claude/.test(location.hostname)) {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], {type: 'application/json'}));
+      a.download = 'tag_' + D.video.replace(/\.\w+$/, '') + '.json'; a.click(); $('notaSalva').textContent = 'File dei tag salvato nei Download.';
+    } else {
+      try { await navigator.clipboard.writeText(txt); $('notaSalva').textContent = 'Tag copiati: incollali nella chat con Claude.'; }
+      catch (e) { $('testoEsporta').select(); $('notaSalva').textContent = 'Seleziona il testo qui sotto e copialo.'; }
+    }
+  };
+
+  // ---------- comandi ----------
+  $('play').onclick = () => att.paused ? att.play() : att.pause();
+  $('prec').onclick = () => salto(-1); $('succ').onclick = () => salto(1);
+  $('vel').onchange = e => { v1.playbackRate = v2.playbackRate = +e.target.value; };
+  $('angolo').onclick = () => {
+    if (!v2.src) { $('file2').click(); return; }
+    cambia();
+  };
+  $('file2').onchange = e => { if (e.target.files[0]) { apri(e.target.files[0], v2); v2.addEventListener('loadedmetadata', cambia, {once: true}); } };
+  function cambia() {
+    const t = ora(), playing = !att.paused; att.pause();
+    const larga = att === v1; att.hidden = true; att = larga ? v2 : v1; offAtt = larga ? (D.angolo2 ? D.angolo2.offset : 0) : 0;
+    att.hidden = false; vai(t); att.playbackRate = +$('vel').value; if (playing) att.play();
+    $('badge').textContent = larga ? (D.angolo2 ? D.angolo2.nome : 'Seconda ripresa') : 'Ripresa stretta';
+    $('angolo').textContent = larga ? 'Ripresa stretta' : 'Ripresa larga';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.target.matches('input,select,textarea')) return;
+    const k = e.key.toLowerCase();
+    if (k === ' ') { e.preventDefault(); $('play').click(); }
+    else if (k === 'arrowright') vai(ora() + 5); else if (k === 'arrowleft') vai(ora() - 5);
+    else if (k === 'n') salto(1); else if (k === 'p') salto(-1); else if (k === 'r') $('angolo').click();
+    else { const t = Object.entries(TIPI).find(([, T]) => T.k === k); if (t) aggiungi(t[0]); }
+  });
+
+  disegnaFiltri(); impostaModo('intera', false); aggiorna();
+})();
+</script>
+
+</body></html>
