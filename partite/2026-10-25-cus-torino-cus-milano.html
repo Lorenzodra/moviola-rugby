@@ -92,8 +92,12 @@ textarea{width:100%;min-height:90px;font:400 .75rem var(--f-mono);background:var
         <video id="v2" playsinline preload="metadata" hidden></video>
         <span class="badge" id="badge">Ripresa stretta</span>
         <div class="vuoto" id="vuoto">
-          <p><strong>Scegli il video originale della partita</strong> (<span id="nomeVideo">MAH00040.MP4</span>). Resta sul tuo computer: l'app lo legge senza caricarlo da nessuna parte.</p>
-          <div><label class="btn" for="file1">Apri video</label><input id="file1" type="file" accept="video/*,.mp4,.mov" hidden></div>
+          <p><strong>Apri la cartella della partita</strong> così come l'hai ricevuta: l'app trova da sola il video giusto (<span id="nomeVideo">MAH00040.MP4</span>). Puoi anche trascinarla qui. Il video resta sul tuo computer: non viene caricato da nessuna parte.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+            <label class="btn" for="cartella">Apri cartella della partita</label><input id="cartella" type="file" webkitdirectory directory multiple hidden>
+            <label class="btn" for="file1">Apri solo il video</label><input id="file1" type="file" accept="video/*,.mp4,.mov" hidden>
+          </div>
+          <p id="msgCartella" class="aiuto" style="color:#e9e4ee"></p>
         </div>
       </div>
 
@@ -166,6 +170,33 @@ textarea{width:100%;min-height:90px;font:400 .75rem var(--f-mono);background:var
   $('sottotitolo').textContent = D.data + ' · video originale, montato al volo';
   function apri(file, v) { v.src = URL.createObjectURL(file); if (v === v1) $('vuoto').hidden = true; }
   $('file1').onchange = e => e.target.files[0] && apri(e.target.files[0], v1);
+  // cartella: cerca il video della partita (stesso nome), altrimenti il .mp4/.mov piu' grande che non sia un nostro taglio
+  function scegliDaCartella(files) {
+    const vid = files.filter(f => /\.(mp4|mov|m4v)$/i.test(f.name));
+    const nome = D.video.toLowerCase();
+    let f = vid.find(x => x.name.toLowerCase() === nome);
+    if (!f) f = vid.filter(x => !/palla_in_gioco|montaggi|clip|_mischie|_touche|_maul|fasi_statiche/i.test((x.webkitRelativePath || x.name)))
+                  .sort((a, b) => b.size - a.size)[0];
+    if (f) { apri(f, v1); return; }
+    const m2ts = files.some(x => /\.m2ts$/i.test(x.name));
+    $('msgCartella').textContent = m2ts ? 'Nella cartella c\'è solo il file .m2ts della videocamera, che il browser non apre: serve la versione .mp4 (' + D.video + ').'
+                                        : 'Nella cartella non trovo ' + D.video + ' né altri video .mp4. Controlla di aver scelto la cartella giusta.';
+  }
+  $('cartella').onchange = e => scegliDaCartella([...e.target.files]);
+  async function leggiVoce(voce, out) {
+    if (voce.isFile) out.push(await new Promise(r => voce.file(r, () => r(null))));
+    else if (voce.isDirectory) {
+      const r = voce.createReader(); let parti;
+      do { parti = await new Promise(ok => r.readEntries(ok, () => ok([]))); for (const p of parti) await leggiVoce(p, out); } while (parti.length);
+    }
+  }
+  const sch = document.querySelector('.schermo');
+  sch.addEventListener('dragover', e => e.preventDefault());
+  sch.addEventListener('drop', async e => {
+    e.preventDefault(); const out = [];
+    for (const it of e.dataTransfer.items) { const v = it.webkitGetAsEntry && it.webkitGetAsEntry(); if (v) await leggiVoce(v, out); }
+    scegliDaCartella(out.filter(Boolean).length ? out.filter(Boolean) : [...e.dataTransfer.files]);
+  });
   if (location.protocol === 'file:' && D.video_rel) {           // aperta dal PC: prende il video accanto
     v1.src = D.video_rel;
     v1.addEventListener('loadedmetadata', () => { $('vuoto').hidden = true; disegna(); }, {once: true});
