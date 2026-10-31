@@ -22,6 +22,10 @@
   --rosa:#ec5b9a; --rosa-ink:#16121a; --mischie:#e2654f; --touche:#6c97ec; --tmaul:#a37ae6; --maul:#3bb3a5; --gioco:#4f7c4d;
   --calcio:#e0a23c; --restart:#6dbb5c; --punizione:#c08d74; color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
+.mon:fullscreen{background:var(--bg);padding:10px 14px;display:flex;flex-direction:column;gap:8px;overflow:auto}
+.mon:fullscreen .schermo{aspect-ratio:auto;flex:1 1 auto;min-height:0}
+.mon:fullscreen .aiuto:last-child{display:none}
 body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body);padding-block:16px 32px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .wrap{max-width:1320px;margin:0 auto;display:grid;gap:14px}
@@ -115,6 +119,7 @@ textarea{width:100%;min-height:90px;font:400 .75rem var(--f-mono);background:var
         <button class="btn s" id="succ" title="Spezzone successivo (N)">Succ. ▶</button>
         <label for="vel" class="aiuto">Velocità</label>
         <select id="vel"><option>0.5</option><option selected>1</option><option>1.5</option><option>2</option></select>
+        <button class="btn s" id="schermoIntero" title="Schermo intero (F)">⛶ Schermo intero</button>
         <button class="btn s" id="angolo" title="Cambia ripresa (R)" hidden>Ripresa larga</button>
         <input id="file2" type="file" accept="video/*,.mp4,.mov" hidden>
       </div>
@@ -126,7 +131,7 @@ textarea{width:100%;min-height:90px;font:400 .75rem var(--f-mono);background:var
         <div class="leg" id="leg"></div>
       </div>
       <div class="stat" id="stat" aria-label="Statistiche"></div>
-      <p class="aiuto"><kbd>spazio</kbd> play/pausa · <kbd>←</kbd><kbd>→</kbd> 5 s · <kbd>N</kbd>/<kbd>P</kbd> spezzone dopo/prima · <kbd>M</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>A</kbd> <kbd>K</kbd> <kbd>I</kbd> <kbd>U</kbd> aggiungi mischia, touche, touche+maul, maul, calcio, restart, punizione nel punto attuale</p>
+      <p class="aiuto"><kbd>spazio</kbd> play/pausa · <kbd>←</kbd><kbd>→</kbd> 5 s · <kbd>N</kbd>/<kbd>P</kbd> spezzone dopo/prima · <kbd>F</kbd> schermo intero · <kbd>M</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>A</kbd> <kbd>K</kbd> <kbd>I</kbd> <kbd>U</kbd> aggiungi mischia, touche, touche+maul, maul, calcio, restart, punizione nel punto attuale</p>
     </section>
 
     <aside class="reg" aria-label="Registro dei tag">
@@ -386,6 +391,17 @@ textarea{width:100%;min-height:90px;font:400 .75rem var(--f-mono);background:var
 
   // ---------- comandi ----------
   $('play').onclick = () => att.paused ? att.play() : att.pause();
+  const mon = document.querySelector('.mon');
+  function schermoIntero() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (mon.requestFullscreen) mon.requestFullscreen().catch(() => {});
+    else if (mon.webkitRequestFullscreen) mon.webkitRequestFullscreen();
+  }
+  $('schermoIntero').onclick = schermoIntero;
+  document.querySelector('.schermo').addEventListener('dblclick', schermoIntero);
+  document.addEventListener('fullscreenchange', () => {
+    $('schermoIntero').textContent = document.fullscreenElement ? '✕ Esci da schermo intero' : '⛶ Schermo intero';
+  });
   $('prec').onclick = () => salto(-1); $('succ').onclick = () => salto(1);
   $('vel').onchange = e => { v1.playbackRate = v2.playbackRate = +e.target.value; };
   $('angolo').onclick = () => {
@@ -405,7 +421,8 @@ textarea{width:100%;min-height:90px;font:400 .75rem var(--f-mono);background:var
     const k = e.key.toLowerCase();
     if (k === ' ') { e.preventDefault(); $('play').click(); }
     else if (k === 'arrowright') vai(ora() + 5); else if (k === 'arrowleft') vai(ora() - 5);
-    else if (k === 'n') salto(1); else if (k === 'p') salto(-1); else if (k === 'r') $('angolo').click();
+    else if (k === 'n') salto(1); else if (k === 'p') salto(-1); else if (k === 'f') schermoIntero();
+    else if (k === 'r') { if (D.angolo2) $('angolo').click(); }
     else { const t = Object.entries(TIPI).find(([, T]) => T.k === k); if (t) aggiungi(t[0]); }
   });
 
